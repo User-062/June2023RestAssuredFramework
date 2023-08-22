@@ -37,7 +37,7 @@ pipeline
         	 steps{
         	 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
         	 	git 'https://github.com/User-062/June2023RestAssuredFramework.git'
-                sh "mvn clean install"
+                sh "mvn clean test -Dsurefire.suitXmlFiles="/Users/mac/Desktop/APITesting/June2023RestAssuredFramework/src/test/resources/testrunners/testng_regression.xml"
             }
         }
       }
@@ -51,7 +51,7 @@ pipeline
                  		properties: [],
                  		reportBuildPolicy: 'ALWAYS',
                  		results: [[path: '/allure-results']]
-                 	]}
+                 	])
                  }		
               } 
            }     		
@@ -69,36 +69,23 @@ pipeline
                      	
             }
                 
-            stage("Deploy to PROD"){
+             stage("Deploy to STAGE"){
             	steps{
-                	echo("deploy to PROD")
+                	echo("deploy to STAGE done")
+            }   
+          }      
+          
+           stage('SanityI Automation Test') {
+        	 steps{
+        	 	catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+        	 	git 'https://github.com/User-062/June2023RestAssuredFramework.git'
+                sh "mvn clean test -Dsurefire.suitXmlFiles="/Users/mac/Desktop/APITesting/June2023RestAssuredFramework/src/test/resources/testrunners/testng_regression.xml"
             }
         }
-     
-     }
-  }          
-        stage('Run Docker Image with Regression Tests') {
-    steps {
-        script {
-        
-        def exitCode = sh(script: "docker run --name apitesting${BUILD_NUMBER} -e MAVEN_OPTS='-Dsurefire.suiteXmlFiles=src/test/resources/testrunners/testng_regression.xml' naveenkhunteta/apitest:latest", returnStatus: true)
-            if (exitCode != 0) {
-                currentBuild.result = 'FAILURE' // Mark the build as failed if tests fail
-            }
-            
-            // Even if tests fail, copy the report (if present)
-            sh "docker start apitesting${BUILD_NUMBER}"
-       	   // sh "sleep 60"
-            sh "docker cp apitesting${BUILD_NUMBER}:/app/reports/APIExecutionReport.html ${WORKSPACE}/reports"
-            sh "docker rm -f apitesting${BUILD_NUMBER}"
-       			 }
-    		}
-		}
-		
-		
-		
-		stage('Publish Regression Extent Report'){
-            steps{
+      }
+      
+      stage('Publish  Extent Report sanity'){
+            	steps{
                      publishHTML([allowMissing: false,
                                   alwaysLinkToLastBuild: false, 
                                   keepAll: false, 
@@ -106,12 +93,17 @@ pipeline
                                   reportFiles: 'APIExecutionReport.html', 
                                   reportName: 'API HTML Regression Extent Report', 
                                   reportTitles: ''])
+           
+                 	}	
+                     	
+            }    
+      
+            stage("Deploy to PROD"){
+            	steps{
+                	echo("deploy to PROD done")
             }
         }
+     
+     }
+  }          
         
-        
-         
-
-         
-    }
-}
