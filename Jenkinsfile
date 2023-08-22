@@ -1,12 +1,6 @@
-pipeline 
-{
-    agent any
+pipeline {agent any
     
-    tools{
-    	maven 'maven'
-        }
-
-    stages 
+tools{ maven '3.9.4'} stages 
     {
         stage('Build') 
         {
